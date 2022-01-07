@@ -8,6 +8,7 @@
 package net.wurstclient.mixin;
 
 import java.util.List;
+import java.util.regex.Pattern;
 
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -28,6 +29,9 @@ import net.wurstclient.mixinterface.IScreen;
 public abstract class ScreenMixin extends AbstractParentElement
 	implements Drawable, IScreen
 {
+	private static final Pattern UUID_PATTERN = Pattern.compile("^<<(.{36})>>");
+	private static final String CMD_PREFIX = ".";
+
 	@Shadow
 	@Final
 	private List<Drawable> drawables;
@@ -42,10 +46,23 @@ public abstract class ScreenMixin extends AbstractParentElement
 	{
 		if(toHud)
 			return;
-		
-		ChatMessageC2SPacket packet = new ChatMessageC2SPacket(message);
-		WurstClient.MC.getNetworkHandler().sendPacket(packet);
-		ci.cancel();
+		/*
+		 * Possible solution #1
+		 */
+		// Some Mods use a <<UUID>> prefix to cloak their commands from servers
+		// Allow those commands through
+		if (UUID_PATTERN.matcher(message).find())
+			return;
+
+
+		/*
+		 * Possible Solution #2
+		 */
+		if (message.startsWith(CMD_PREFIX)) {
+			ChatMessageC2SPacket packet = new ChatMessageC2SPacket(message);
+			WurstClient.MC.getNetworkHandler().sendPacket(packet);
+			ci.cancel();
+		}
 	}
 	
 	@Inject(at = {@At("HEAD")},
