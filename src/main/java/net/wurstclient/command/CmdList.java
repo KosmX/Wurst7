@@ -23,6 +23,7 @@ public final class CmdList
 	public final BindCmd bindCmd = new BindCmd();
 	public final BindsCmd bindsCmd = new BindsCmd();
 	public final BlinkCmd blinkCmd = new BlinkCmd();
+	public final BlockListCmd blockListCmd = new BlockListCmd();
 	public final ClearCmd clearCmd = new ClearCmd();
 	public final CopyItemCmd copyitemCmd = new CopyItemCmd();
 	public final DamageCmd damageCmd = new DamageCmd();
@@ -41,6 +42,7 @@ public final class CmdList
 	public final HelpCmd helpCmd = new HelpCmd();
 	public final InvseeCmd invseeCmd = new InvseeCmd();
 	public final IpCmd ipCmd = new IpCmd();
+	public final ItemListCmd itemListCmd = new ItemListCmd();
 	public final JumpCmd jumpCmd = new JumpCmd();
 	public final LeaveCmd leaveCmd = new LeaveCmd();
 	public final ModifyCmd modifyCmd = new ModifyCmd();
@@ -65,6 +67,7 @@ public final class CmdList
 	public final UnbindCmd unbindCmd = new UnbindCmd();
 	public final VClipCmd vClipCmd = new VClipCmd();
 	public final ViewNbtCmd viewNbtCmd = new ViewNbtCmd();
+	public final XrayCmd xrayCmd = new XrayCmd();
 	
 	private final TreeMap<String, Command> cmds =
 		new TreeMap<>(String::compareToIgnoreCase);
