@@ -21,7 +21,6 @@ import net.minecraft.client.gui.AbstractParentElement;
 import net.minecraft.client.gui.Drawable;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.network.packet.c2s.play.ChatMessageC2SPacket;
 import net.wurstclient.WurstClient;
 import net.wurstclient.mixinterface.IScreen;
 

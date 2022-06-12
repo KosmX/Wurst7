@@ -22,7 +22,6 @@ import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.client.resource.language.I18n;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import net.wurstclient.WurstClient;
@@ -68,7 +67,50 @@ public abstract class GameMenuScreenMixin extends Screen
 			204, 20, new LiteralText("            Options"),
 			b -> openWurstOptions());
 		
-		addDrawableChild(wurstOptionsButton);
+		int buttonY = -1;
+		int buttonI = -1;
+		
+		for(int i = 0; i < buttons.size(); ++i)
+		{
+			ClickableWidget button = buttons.get(i);
+			
+			// insert Wurst button in place of feedback/report row
+			if(isFeedbackButton(button))
+			{
+				buttonY = button.y;
+				buttonI = i;
+			}
+			
+			// make feedback/report buttons invisible
+			// (removing them completely would break ModMenu)
+			if(isFeedbackButton(button) || isBugReportButton(button))
+				button.visible = false;
+		}
+		
+		if(buttonY == -1 || buttonI == -1)
+			throw new CrashException(
+				CrashReport.create(new IllegalStateException(),
+					"Someone deleted the Feedback button!"));
+		
+		wurstOptionsButton = new ButtonWidget(width / 2 - 102, buttonY, 204, 20,
+			Text.literal("            Options"), b -> openWurstOptions());
+		buttons.add(buttonI, wurstOptionsButton);
+	}
+	
+	private boolean isFeedbackButton(ClickableWidget button)
+	{
+		return hasTrKey(button, "menu.sendFeedback");
+	}
+	
+	private boolean isBugReportButton(ClickableWidget button)
+	{
+		return hasTrKey(button, "menu.reportBugs");
+	}
+	
+	private boolean hasTrKey(ClickableWidget button, String key)
+	{
+		String message = button.getMessage().getString();
+		return message != null && message.equals(I18n.translate(key));
 	}
 	
 	private void openWurstOptions()
