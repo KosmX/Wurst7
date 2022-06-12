@@ -7,8 +7,7 @@
  */
 package net.wurstclient.mixin;
 
-import java.util.List;
-
+import net.fabricmc.loader.api.FabricLoader;
 import org.lwjgl.opengl.GL11;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -17,7 +16,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 
-import net.fabricmc.fabric.api.client.screen.v1.Screens;
 import net.minecraft.client.gui.screen.GameMenuScreen;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
@@ -26,36 +24,48 @@ import net.minecraft.client.resource.language.I18n;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.crash.CrashException;
-import net.minecraft.util.crash.CrashReport;
 import net.wurstclient.WurstClient;
+import net.wurstclient.mixinterface.IScreen;
 import net.wurstclient.options.WurstOptionsScreen;
+
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @Mixin(GameMenuScreen.class)
 public abstract class GameMenuScreenMixin extends Screen
 {
 	private static final Identifier wurstTexture =
 		new Identifier("wurst", "wurst_128.png");
-	
+	private AtomicBoolean isModMenuPresent;
+
 	private ButtonWidget wurstOptionsButton;
 	
 	private GameMenuScreenMixin(WurstClient wurst, Text text_1)
 	{
 		super(text_1);
 	}
+
+	private boolean isModMenu(){
+		if(isModMenuPresent == null){
+			isModMenuPresent = new AtomicBoolean(FabricLoader.getInstance().isModLoaded("modmenu"));
+		}
+		return isModMenuPresent.get();
+	}
 	
 	@Inject(at = {@At("TAIL")}, method = {"initWidgets()V"})
 	private void onInitWidgets(CallbackInfo ci)
 	{
-		if(!WurstClient.INSTANCE.isEnabled())
+		if(!WurstClient.INSTANCE.isEnabled() || isModMenu())
 			return;
 		
 		addWurstOptionsButton();
+		removeFeedbackAndBugReportButtons();
 	}
 	
 	private void addWurstOptionsButton()
 	{
-		List<ClickableWidget> buttons = Screens.getButtons(this);
+		wurstOptionsButton = new ButtonWidget(width / 2 - 102, height / 4 + 56,
+			204, 20, new LiteralText("            Options"),
+			b -> openWurstOptions());
 		
 		int buttonY = -1;
 		int buttonI = -1;
@@ -108,12 +118,32 @@ public abstract class GameMenuScreenMixin extends Screen
 		client.setScreen(new WurstOptionsScreen(this));
 	}
 	
+	private void removeFeedbackAndBugReportButtons()
+	{
+		((IScreen)this).getButtons()
+			.removeIf(this::isFeedbackOrBugReportButton);
+		children().removeIf(this::isFeedbackOrBugReportButton);
+	}
+	
+	private boolean isFeedbackOrBugReportButton(Object element)
+	{
+		if(element == null || !(element instanceof ClickableWidget))
+			return false;
+		
+		ClickableWidget button = (ClickableWidget)element;
+		String message = button.getMessage().getString();
+		
+		return message != null
+			&& (message.equals(I18n.translate("menu.sendFeedback"))
+				|| message.equals(I18n.translate("menu.reportBugs")));
+	}
+	
 	@Inject(at = {@At("TAIL")},
 		method = {"render(Lnet/minecraft/client/util/math/MatrixStack;IIF)V"})
 	private void onRender(MatrixStack matrixStack, int mouseX, int mouseY,
 		float partialTicks, CallbackInfo ci)
 	{
-		if(!WurstClient.INSTANCE.isEnabled())
+		if(!WurstClient.INSTANCE.isEnabled() || isModMenu())
 			return;
 		
 		GL11.glEnable(GL11.GL_CULL_FACE);
