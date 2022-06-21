@@ -7,6 +7,7 @@
  */
 package net.wurstclient.mixin;
 
+import net.minecraft.entity.effect.StatusEffectInstance;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Final;
@@ -45,6 +46,7 @@ import net.wurstclient.events.UpdateListener.UpdateEvent;
 import net.wurstclient.hacks.FullbrightHack;
 import net.wurstclient.mixinterface.IClientPlayerEntity;
 
+import java.util.Collection;
 import java.util.regex.Pattern;
 
 @Mixin(ClientPlayerEntity.class)
@@ -242,10 +244,26 @@ public class ClientPlayerEntityMixin extends AbstractClientPlayerEntity
 		if(effect == StatusEffects.NIGHT_VISION
 			&& fullbright.isNightVisionActive())
 			return true;
-		
+
+		if (effect == StatusEffects.DARKNESS || effect == StatusEffects.BLINDNESS) {
+			if (WurstClient.INSTANCE.getHax().antiBlindHack.isEnabled()) {
+				return false;
+			}
+		}
+
 		return super.hasStatusEffect(effect);
 	}
-	
+
+	@Override
+	public StatusEffectInstance getStatusEffect(StatusEffect effect) {
+		if (effect == StatusEffects.DARKNESS || effect == StatusEffects.BLINDNESS) {
+			if (WurstClient.INSTANCE.getHax().antiBlindHack.isEnabled()) {
+				return null;
+			}
+		}
+		return super.getStatusEffect(effect);
+	}
+
 	@Override
 	public void setNoClip(boolean noClip)
 	{
