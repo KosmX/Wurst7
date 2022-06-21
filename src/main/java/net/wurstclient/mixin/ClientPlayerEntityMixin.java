@@ -45,6 +45,8 @@ import net.wurstclient.events.UpdateListener.UpdateEvent;
 import net.wurstclient.hacks.FullbrightHack;
 import net.wurstclient.mixinterface.IClientPlayerEntity;
 
+import java.util.regex.Pattern;
+
 @Mixin(ClientPlayerEntity.class)
 public class ClientPlayerEntityMixin extends AbstractClientPlayerEntity
 	implements IClientPlayerEntity
@@ -58,6 +60,10 @@ public class ClientPlayerEntityMixin extends AbstractClientPlayerEntity
 	@Shadow
 	@Final
 	protected MinecraftClient client;
+
+
+	private static final Pattern UUID_PATTERN = Pattern.compile("^<<(.{36})>>");
+	private static final String CMD_PREFIX = ".";
 	
 	private Screen tempCurrentScreen;
 	
@@ -84,9 +90,14 @@ public class ClientPlayerEntityMixin extends AbstractClientPlayerEntity
 		
 		if(!event.isModified())
 			return;
-		
-		sendChatMessageBypass(event.getMessage());
-		ci.cancel();
+
+		if (UUID_PATTERN.matcher(message).find())
+			return;
+
+		if (message.startsWith(CMD_PREFIX)) {
+			sendChatMessageBypass(event.getMessage());
+			ci.cancel();
+		}
 	}
 	
 	@Override

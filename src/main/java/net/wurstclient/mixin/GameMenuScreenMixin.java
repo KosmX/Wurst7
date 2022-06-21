@@ -7,7 +7,10 @@
  */
 package net.wurstclient.mixin;
 
+import net.fabricmc.fabric.api.client.screen.v1.Screens;
 import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.util.crash.CrashException;
+import net.minecraft.util.crash.CrashReport;
 import org.lwjgl.opengl.GL11;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -28,6 +31,7 @@ import net.wurstclient.WurstClient;
 import net.wurstclient.mixinterface.IScreen;
 import net.wurstclient.options.WurstOptionsScreen;
 
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 @Mixin(GameMenuScreen.class)
@@ -60,40 +64,38 @@ public abstract class GameMenuScreenMixin extends Screen
 		addWurstOptionsButton();
 		removeFeedbackAndBugReportButtons();
 	}
-	
+
 	private void addWurstOptionsButton()
 	{
-		wurstOptionsButton = new ButtonWidget(width / 2 - 102, height / 4 + 56,
-			204, 20, new LiteralText("            Options"),
-			b -> openWurstOptions());
-		
+		List<ClickableWidget> buttons = Screens.getButtons(this);
+
 		int buttonY = -1;
 		int buttonI = -1;
-		
+
 		for(int i = 0; i < buttons.size(); ++i)
 		{
 			ClickableWidget button = buttons.get(i);
-			
+
 			// insert Wurst button in place of feedback/report row
 			if(isFeedbackButton(button))
 			{
 				buttonY = button.y;
 				buttonI = i;
 			}
-			
+
 			// make feedback/report buttons invisible
 			// (removing them completely would break ModMenu)
 			if(isFeedbackButton(button) || isBugReportButton(button))
 				button.visible = false;
 		}
-		
+
 		if(buttonY == -1 || buttonI == -1)
 			throw new CrashException(
-				CrashReport.create(new IllegalStateException(),
-					"Someone deleted the Feedback button!"));
-		
+					CrashReport.create(new IllegalStateException(),
+							"Someone deleted the Feedback button!"));
+
 		wurstOptionsButton = new ButtonWidget(width / 2 - 102, buttonY, 204, 20,
-			Text.literal("            Options"), b -> openWurstOptions());
+				Text.literal("            Options"), b -> openWurstOptions());
 		buttons.add(buttonI, wurstOptionsButton);
 	}
 	
