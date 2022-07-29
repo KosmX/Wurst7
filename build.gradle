@@ -41,6 +41,10 @@ dependencies {
 	modImplementation 'com.terraformersmc:modmenu:4.0.0'
 }
 
+loom {
+	accessWidenerPath = file("src/main/resources/wurst.accesswidener")
+}
+
 processResources {
 	inputs.property "version", project.version
   
