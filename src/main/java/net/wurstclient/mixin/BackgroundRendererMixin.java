@@ -7,15 +7,17 @@
  */
 package net.wurstclient.mixin;
 
+import net.minecraft.entity.Entity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import org.spongepowered.asm.mixin.injection.Redirect;
 
 import net.minecraft.client.render.BackgroundRenderer;
 import net.minecraft.client.render.BackgroundRenderer.StatusEffectFogModifier;
 import net.minecraft.entity.Entity;
 import net.wurstclient.WurstClient;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(BackgroundRenderer.class)
 public class BackgroundRendererMixin
@@ -27,7 +29,18 @@ public class BackgroundRendererMixin
 	private static void onGetFogModifier(Entity entity, float tickDelta,
 		CallbackInfoReturnable<StatusEffectFogModifier> ci)
 	{
-		if(WurstClient.INSTANCE.getHax().antiBlindHack.isEnabled())
-			ci.setReturnValue(null);
+		if(effect == StatusEffects.BLINDNESS
+			&& WurstClient.INSTANCE.getHax().antiBlindHack.isEnabled())
+			cir.setReturnValue(false);
+		
+		return entity.hasStatusEffect(effect);
+	}
+	
+
+	@Inject(method = "getFogModifier", at = @At("HEAD"), cancellable = true)
+	private static void getForModified(Entity entity, float tickDelta, CallbackInfoReturnable cir) {
+		if (WurstClient.INSTANCE.getHax().antiBlindHack.isEnabled()) {
+			cir.setReturnValue(null);
+		}
 	}
 }
