@@ -7,37 +7,20 @@
  */
 package net.wurstclient.mixin;
 
-import net.minecraft.entity.effect.StatusEffectInstance;
-import org.jetbrains.annotations.Nullable;
-import org.objectweb.asm.Opcodes;
-import org.spongepowered.asm.mixin.Final;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-
 import com.mojang.authlib.GameProfile;
 import com.mojang.brigadier.ParseResults;
-
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
-import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.command.CommandSource;
 import net.minecraft.entity.MovementType;
 import net.minecraft.entity.effect.StatusEffect;
+import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.network.encryption.PlayerPublicKey;
-import net.minecraft.network.message.ArgumentSignatureDataMap;
-import net.minecraft.network.message.DecoratedContents;
-import net.minecraft.network.message.LastSeenMessageList;
-import net.minecraft.network.message.MessageMetadata;
-import net.minecraft.network.message.MessageSignatureData;
+import net.minecraft.network.message.*;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.Vec3d;
 import net.wurstclient.WurstClient;
@@ -50,9 +33,16 @@ import net.wurstclient.events.PreMotionListener.PreMotionEvent;
 import net.wurstclient.events.UpdateListener.UpdateEvent;
 import net.wurstclient.hacks.FullbrightHack;
 import net.wurstclient.mixinterface.IClientPlayerEntity;
-
-import java.util.Collection;
-import java.util.regex.Pattern;
+import org.jetbrains.annotations.Nullable;
+import org.objectweb.asm.Opcodes;
+import org.spongepowered.asm.mixin.Final;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(ClientPlayerEntity.class)
 public class ClientPlayerEntityMixin extends AbstractClientPlayerEntity
@@ -63,57 +53,18 @@ public class ClientPlayerEntityMixin extends AbstractClientPlayerEntity
 	@Shadow
 	private float lastPitch;
 	@Shadow
-	private ClientPlayNetworkHandler networkHandler;
-	@Shadow
 	@Final
 	protected MinecraftClient client;
 
-
-	private static final Pattern UUID_PATTERN = Pattern.compile("^<<(.{36})>>");
-	private static final String CMD_PREFIX = ".";
-	
 	private Screen tempCurrentScreen;
 	
-	public ClientPlayerEntityMixin(WurstClient wurst, ClientWorld world,
-		GameProfile profile, PlayerPublicKey playerPublicKey)
+	public ClientPlayerEntityMixin(ClientWorld world,
+								   GameProfile profile, PlayerPublicKey playerPublicKey)
 	{
 		super(world, profile, playerPublicKey);
 	}
-	
-	@Inject(at = @At("HEAD"),
-		method = "sendChatMessage(Ljava/lang/String;Lnet/minecraft/text/Text;)V",
-		cancellable = true)
-	private void onSendChatMessage(String message, @Nullable Text preview,
-		CallbackInfo ci)
-	{
-		ChatOutputEvent event = new ChatOutputEvent(message);
-		EventManager.fire(event);
-		
-		if(event.isCancelled())
-		{
-			ci.cancel();
-			return;
-		}
-		
-		if(!event.isModified())
-			return;
 
-		if (UUID_PATTERN.matcher(message).find())
-			return;
 
-		if (message.startsWith(CMD_PREFIX)) {
-			sendChatMessageBypass(event.getMessage());
-			ci.cancel();
-		}
-	}
-	
-	@Override
-	public void sendChatMessageBypass(String message)
-	{
-		ChatMessageSigner signer = ChatMessageSigner.create(getUuid());
-		sendChatMessagePacket(signer, message, null);
-	}
-	
 	@Inject(at = @At(value = "INVOKE",
 		target = "Lnet/minecraft/client/network/AbstractClientPlayerEntity;tick()V",
 		ordinal = 0), method = "tick()V")
