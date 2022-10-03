@@ -7,36 +7,20 @@
  */
 package net.wurstclient.mixin;
 
-import org.jetbrains.annotations.Nullable;
-import org.objectweb.asm.Opcodes;
-import org.spongepowered.asm.mixin.Final;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-
 import com.mojang.authlib.GameProfile;
 import com.mojang.brigadier.ParseResults;
-
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
-import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.command.CommandSource;
 import net.minecraft.entity.MovementType;
 import net.minecraft.entity.effect.StatusEffect;
+import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.network.encryption.PlayerPublicKey;
-import net.minecraft.network.message.ArgumentSignatureDataMap;
-import net.minecraft.network.message.DecoratedContents;
-import net.minecraft.network.message.LastSeenMessageList;
-import net.minecraft.network.message.MessageMetadata;
-import net.minecraft.network.message.MessageSignatureData;
+import net.minecraft.network.message.*;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.Vec3d;
 import net.wurstclient.WurstClient;
@@ -49,6 +33,16 @@ import net.wurstclient.events.PreMotionListener.PreMotionEvent;
 import net.wurstclient.events.UpdateListener.UpdateEvent;
 import net.wurstclient.hack.HackList;
 import net.wurstclient.mixinterface.IClientPlayerEntity;
+import org.jetbrains.annotations.Nullable;
+import org.objectweb.asm.Opcodes;
+import org.spongepowered.asm.mixin.Final;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(ClientPlayerEntity.class)
 public class ClientPlayerEntityMixin extends AbstractClientPlayerEntity
@@ -59,19 +53,18 @@ public class ClientPlayerEntityMixin extends AbstractClientPlayerEntity
 	@Shadow
 	private float lastPitch;
 	@Shadow
-	private ClientPlayNetworkHandler networkHandler;
-	@Shadow
 	@Final
 	protected MinecraftClient client;
-	
+
 	private Screen tempCurrentScreen;
 	
-	public ClientPlayerEntityMixin(WurstClient wurst, ClientWorld world,
-		GameProfile profile, PlayerPublicKey playerPublicKey)
+	public ClientPlayerEntityMixin(ClientWorld world,
+								   GameProfile profile, PlayerPublicKey playerPublicKey)
 	{
 		super(world, profile, playerPublicKey);
 	}
-	
+
+
 	@Inject(at = @At(value = "INVOKE",
 		target = "Lnet/minecraft/client/network/AbstractClientPlayerEntity;tick()V",
 		ordinal = 0), method = "tick()V")
@@ -229,14 +222,30 @@ public class ClientPlayerEntityMixin extends AbstractClientPlayerEntity
 		if(effect == StatusEffects.NIGHT_VISION
 			&& hax.fullbrightHack.isNightVisionActive())
 			return true;
-		
-		if(effect == StatusEffects.LEVITATION
+
+    if(effect == StatusEffects.LEVITATION
 			&& hax.noLevitationHack.isEnabled())
 			return false;
-		
+
+		if (effect == StatusEffects.DARKNESS || effect == StatusEffects.BLINDNESS) {
+			if (WurstClient.INSTANCE.getHax().antiBlindHack.isEnabled()) {
+				return false;
+			}
+
+		}
 		return super.hasStatusEffect(effect);
 	}
-	
+
+	@Override
+	public StatusEffectInstance getStatusEffect(StatusEffect effect) {
+		if (effect == StatusEffects.DARKNESS || effect == StatusEffects.BLINDNESS) {
+			if (WurstClient.INSTANCE.getHax().antiBlindHack.isEnabled()) {
+				return null;
+			}
+		}
+		return super.getStatusEffect(effect);
+	}
+
 	@Override
 	public void setNoClip(boolean noClip)
 	{
