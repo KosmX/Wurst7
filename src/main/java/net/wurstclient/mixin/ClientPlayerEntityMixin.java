@@ -31,7 +31,7 @@ import net.wurstclient.events.PlayerMoveListener.PlayerMoveEvent;
 import net.wurstclient.events.PostMotionListener.PostMotionEvent;
 import net.wurstclient.events.PreMotionListener.PreMotionEvent;
 import net.wurstclient.events.UpdateListener.UpdateEvent;
-import net.wurstclient.hacks.FullbrightHack;
+import net.wurstclient.hack.HackList;
 import net.wurstclient.mixinterface.IClientPlayerEntity;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Opcodes;
@@ -217,19 +217,22 @@ public class ClientPlayerEntityMixin extends AbstractClientPlayerEntity
 	@Override
 	public boolean hasStatusEffect(StatusEffect effect)
 	{
-		FullbrightHack fullbright =
-			WurstClient.INSTANCE.getHax().fullbrightHack;
+		HackList hax = WurstClient.INSTANCE.getHax();
 		
 		if(effect == StatusEffects.NIGHT_VISION
-			&& fullbright.isNightVisionActive())
+			&& hax.fullbrightHack.isNightVisionActive())
 			return true;
+
+    if(effect == StatusEffects.LEVITATION
+			&& hax.noLevitationHack.isEnabled())
+			return false;
 
 		if (effect == StatusEffects.DARKNESS || effect == StatusEffects.BLINDNESS) {
 			if (WurstClient.INSTANCE.getHax().antiBlindHack.isEnabled()) {
 				return false;
 			}
-		}
 
+		}
 		return super.hasStatusEffect(effect);
 	}
 
