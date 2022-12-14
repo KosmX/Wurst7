@@ -8,6 +8,7 @@
 package net.wurstclient.mixin;
 
 import java.util.List;
+import java.util.regex.Pattern;
 
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -25,22 +26,22 @@ import net.wurstclient.mixinterface.IScreen;
 
 @Mixin(Screen.class)
 public abstract class ScreenMixin extends AbstractParentElement
-	implements Drawable, IScreen
+		implements Drawable, IScreen
 {
 	@Shadow
 	@Final
 	private List<Drawable> drawables;
-	
+
 	@Inject(at = {@At("HEAD")},
-		method = {
-			"renderBackground(Lnet/minecraft/client/util/math/MatrixStack;)V"},
-		cancellable = true)
+			method = {
+					"renderBackground(Lnet/minecraft/client/util/math/MatrixStack;)V"},
+			cancellable = true)
 	public void onRenderBackground(MatrixStack matrices, CallbackInfo ci)
 	{
 		if(WurstClient.INSTANCE.getHax().noBackgroundHack.isEnabled())
 			ci.cancel();
 	}
-	
+
 	@Override
 	public List<Drawable> getButtons()
 	{
