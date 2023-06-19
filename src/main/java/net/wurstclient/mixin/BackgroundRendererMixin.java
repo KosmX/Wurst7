@@ -39,7 +39,7 @@ public class BackgroundRendererMixin
 
 
 	@Inject(method = "getFogModifier", at = @At("HEAD"), cancellable = true)
-	private static void getForModified(Entity entity, float tickDelta, CallbackInfoReturnable cir) {
+	private static void getForModified(Entity entity, float tickDelta, CallbackInfoReturnable<BackgroundRenderer.StatusEffectFogModifier> cir) {
 		if (WurstClient.INSTANCE.getHax().antiBlindHack.isEnabled()) {
 			cir.setReturnValue(null);
 		}
