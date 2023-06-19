@@ -8,6 +8,7 @@
 package net.wurstclient.mixin;
 
 import java.util.List;
+import java.util.regex.Pattern;
 
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -25,7 +26,7 @@ import net.wurstclient.mixinterface.IScreen;
 
 @Mixin(Screen.class)
 public abstract class ScreenMixin extends AbstractParentElement
-	implements Drawable, IScreen
+		implements Drawable, IScreen
 {
 	@Shadow
 	@Final
@@ -40,7 +41,7 @@ public abstract class ScreenMixin extends AbstractParentElement
 			.shouldCancelBackground((Screen)(Object)this))
 			ci.cancel();
 	}
-	
+
 	@Override
 	public List<Drawable> getButtons()
 	{
