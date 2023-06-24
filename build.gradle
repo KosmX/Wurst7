@@ -46,7 +46,7 @@ dependencies {
 	// In other words, Wurst won't compile without this library,
 	// even though it's Minecraft that actually uses it.
 	implementation 'com.google.code.findbugs:jsr305:3.0.2' //This is NOT a mod
-	modImplementation 'com.terraformersmc:modmenu:5.0.2'
+	modImplementation 'com.terraformersmc:modmenu:7.1.0'
 }
 
 loom {

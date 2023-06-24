@@ -155,7 +155,7 @@ public abstract class GameRendererMixin
 	}
 	
 	@Shadow
-	private void loadPostProcessor(Identifier id)
+	void loadPostProcessor(Identifier id)
 	{
 		
 	}
